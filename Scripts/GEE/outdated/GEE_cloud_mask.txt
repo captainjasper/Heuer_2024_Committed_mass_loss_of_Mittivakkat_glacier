@@ -1,0 +1,108 @@
+// created on:  2024-03-21
+// @author:     Jasper Heuer
+// use:         collect and cloud mask Landsat 5/7/8/9 imagery
+
+// get data ==================================================================================================================
+
+// var dataset = ee.ImageCollection("LANDSAT/LT05/C02/T1_L2")
+// var dataset = ee.ImageCollection("LANDSAT/LE07/C02/T1_L2")
+// var dataset = ee.ImageCollection("LANDSAT/LC08/C02/T1_L2")
+var dataset = ee.ImageCollection("LANDSAT/LC09/C02/T1_L2")
+  .filterDate("1984-01-01", "2024-12-31")
+  .filter(ee.Filter.calendarRange(8, 9, "month"))
+  .filterBounds(geometry);
+  // .select(["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B7"]) // select bands to be exported
+  // .filter(ee.Filter.lte("CLOUD_COVER", 20));
+  
+// define functions ==========================================================================================================
+
+// define cloud function:
+function createSnowMask(image) {
+  var qa = image.select('QA_PIXEL'); // extract QA_PIXEL band
+  
+  // create masks for snow, cloud, and cloud shadow:
+  var snowMask = qa.bitwiseAnd(1 << 5).neq(0).rename('snowmask');
+  var cloudMask = qa.bitwiseAnd(1 << 3).neq(0).rename('cloudmask');
+  var cloudShadowMask = qa.bitwiseAnd(1 << 4).neq(0).rename('shadowmask');
+  
+  // return image with the snow, cloud, and cloud shadow masks as bands:
+  return ee.Image([snowMask, cloudMask, cloudShadowMask]).clip(geometry);
+}
+
+// define scaling function:
+function applyScaleFactors(image) {
+  // scale optical bands and thermal band:
+  var opticalBands = image.select('SR_B.').multiply(0.0000275).add(-0.2);
+  // var thermalBand = image.select('ST_B6').multiply(0.00341802).add(149.0);
+  
+  // add scaled bands to the image:
+  return image.addBands(opticalBands, null, true)
+              // .addBands(thermalBand, null, true)
+              .clip(geometry);
+}
+
+// apply masking =============================================================================================================
+
+var snowmask = dataset.map(createSnowMask).select("snowmask"); // snow  mask collection
+var cloudmask = dataset.map(createSnowMask).select("cloudmask"); // cloud mask collection
+var dataset = dataset.map(applyScaleFactors); // scale imagery
+// var clipped_main_col = main_col.map(clip_collection); // Landsat imagery collection
+
+print(dataset);
+
+// visualize imagery =========================================================================================================
+
+var visualization = {
+  bands: ['SR_B3', 'SR_B2', 'SR_B1'],
+  min: 0.0,
+  max: 0.5,
+};
+
+// Visualize the Landsat true color image with the snow mask applied
+Map.addLayer(dataset.first(), visualization, 'True Color (321)');
+// Add snow mask layer to the map
+Map.addLayer(snowmask.first(), {min: 0, max: 1, palette:['black', 'white']}, 'Snow Mask');
+// Add cloud mask layer to the map
+Map.addLayer(cloudmask.first(), {min: 0, max:1, palette:['black', 'red']}, 'Cloud Mask');
+
+// count cloud pixels ========================================================================================================
+
+var id = dataset.aggregate_array("system:index");
+print(id);
+
+id.evaluate(function(list){
+  list.map(function(id){
+    var cloud_image = cloudmask.filter(ee.Filter.eq("system:index", id)).first();
+    var count = cloud_image.reduceRegion({
+      reducer: ee.Reducer.histogram(),
+      geometry: geometry,
+      scale: 30,
+      maxPixels: 1e9  
+    });
+    
+    var values = ee.List(count.get("cloudmask").getInfo()["histogram"]);
+    var length = values.length();
+    
+    // section below breaks when length < 2:
+    var cloud_count = values.get(1).getInfo();
+    var non_cloud_count = values.get(0).getInfo();
+    
+    // if-statement executes both cases:
+    // ee.Algorithms.If(length < 2, 
+    //  clould_count = 0,
+    //  cloud_count = values.get(1).getInfo();
+    // ee.Algorithms.If(length < 2, 
+    //  non_clould_count = 1,
+    //  non_cloud_count = values.get(0).getInfo();
+
+    var ratio = cloud_count / (cloud_count + non_cloud_count);
+    var flag = ratio <= 0.1;
+    print(flag);
+    
+    var image = dataset.filter(ee.Filter.eq("system:index", id)).first().set("CLOUD_RATIO", ratio);
+    var mask = cloudmask.filter(ee.Filter.eq("system:index", id)).first();
+    var masked_img = image.updateMask(mask);
+    
+    ee.Algorithms.If(flag, print("export image"), print("do not export image"));
+  });
+});
