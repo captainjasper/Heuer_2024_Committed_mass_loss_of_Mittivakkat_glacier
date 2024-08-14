@@ -41,7 +41,8 @@ site='MIT'
 
 timeframe='month'
 
-url = "https://thredds.geus.dk/thredds/fileServer/aws_l3_station_csv/level_3/{}/{}_{}.csv".format(site,site,timeframe)
+url = "https://thredds.geus.dk/thredds/fileServer/aws_l3_station_csv/level_3/{}/{}_{}.csv" \
+    .format(site,site,timeframe)
 promice = pd.read_csv(url)
 promice["time"] = pd.to_datetime(promice['time'])
 promice.index = pd.to_datetime(promice["time"])

@@ -40,7 +40,8 @@ print(model.summary()) # large condition number only due to scale of X input
 fig, ax = plt.subplots()
 
 plot_01 = ax.plot(df["Year"], df["ELA"], "-o", label="ELA", color="red")
-plot_02 = ax.fill_between(df["Year"], df["ELA (0.5)"], df["ELA (0.6)"], color="pink", label="Uncertainty envelope")
+plot_02 = ax.fill_between(df["Year"], df["ELA (0.5)"], df["ELA (0.6)"], color="pink", 
+                          label="Uncertainty envelope")
 plot_03 = ax.plot(X["Year"], model.predict(X), color="black", label="Trendline", linestyle="--")
 ax.set_ylabel("ELA in meters")
 plt.title("ELA with uncertainty envelope")

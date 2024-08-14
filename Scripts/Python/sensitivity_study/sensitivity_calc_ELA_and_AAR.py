@@ -129,6 +129,6 @@ df = df.sort_values(by=["Year", "Month", "Day"], axis=0, ascending=True) # sort 
 df = df.reset_index() # reset index
 df = df.drop("index", axis=1) # drop old index column
 
-df_analysis = df.loc[df.groupby("Year").AAR.idxmin()].reset_index(drop=True) # get lowest AAR per year
+df_analysis = df.loc[df.groupby("Year").AAR.idxmin()].reset_index(drop=True)
 
 df_analysis.to_excel("./Landsat/Sensitivity_study/sensitivity_table_05.xlsx")

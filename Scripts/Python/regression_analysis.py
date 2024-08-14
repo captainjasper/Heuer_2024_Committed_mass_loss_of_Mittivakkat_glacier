@@ -62,7 +62,8 @@ wgms_model = sma.OLS(wgms_y, wgms_X).fit()
 print(wgms_model.summary()) # large condition number only due to scale of X input
 
 # compute confidence intervals:
-wgms_std_err, wgms_upper, wgms_lower =  wls_prediction_std(wgms_model, alpha=0.05) # tool is valid for OLS
+wgms_std_err, wgms_upper, wgms_lower =  wls_prediction_std(wgms_model, 
+                                                           alpha=0.05) # tool is valid for OLS
 wgms_std_err = np.mean(wgms_std_err[:])
 
 # save results:
@@ -199,7 +200,7 @@ wgms_model = sma.OLS(wgms_y, wgms_X).fit()
 print(wgms_model.summary()) # large condition number only due to scale of X input
 
 # compute confidence intervals:
-wgms_std_err, wgms_upper, wgms_lower =  wls_prediction_std(wgms_model, alpha=0.05) # tool is valid for OLS
+wgms_std_err, wgms_upper, wgms_lower =  wls_prediction_std(wgms_model, alpha=0.05)
 wgms_std_err = np.mean(wgms_std_err[:])
 
 # save results:
@@ -332,7 +333,7 @@ wgms_model = sma.OLS(wgms_y, wgms_X).fit()
 print(wgms_model.summary()) # large condition number only due to scale of X input
 
 # compute confidence intervals:
-wgms_std_err, wgms_upper, wgms_lower =  wls_prediction_std(wgms_model, alpha=0.05) # tool is valid for OLS
+wgms_std_err, wgms_upper, wgms_lower =  wls_prediction_std(wgms_model, alpha=0.05)
 wgms_std_err = np.mean(wgms_std_err[:])
 
 # save results:
@@ -582,13 +583,15 @@ ax1.set_ylabel("AAR", color="black")
 ax1.set_xlabel("SMB in mm w.eq.")
 ax1.tick_params(axis="y", colors="black")
 plot_01 = ax1.scatter(X["SMB"], y, color="black", label="Original data")
-plot_02 = ax1.plot([-4000, 500], model.predict([[1, -4000], [1, 500]]), color="red", label="Trendline", linestyle="--")
+plot_02 = ax1.plot([-4000, 500], model.predict([[1, -4000], [1, 500]]), color="red", 
+                   label="Trendline", linestyle="--")
 plot_03 = ax1.plot(df["SMB"][[7, 31]], upper[[7, 31]], color="red", linestyle="dotted")
 plot_04 = ax1.plot(df["SMB"][[7, 31]], lower[[7, 31]], color="red", label="95% confidence interval",
                    linestyle="dotted")
+plot_05 = ax1.plot(0, 0.7418, marker="x", color="black")
 plt.title("AAR-SMB regression")
 plt.xlim(-3400, 450)
-# plt.text(-2000, -0.4, model_str)
+plt.text(30, 0.8, "$AAR_{0}$")
 plt.axvline(x=0, color="black", linestyle="--")
 plt.legend(bbox_to_anchor=(-0.1, -0.3, 1, 1), loc="lower left", ncols=3)
 plt.savefig("./Plots/aar_smb_regression.png", bbox_inches="tight", dpi=300)
@@ -654,7 +657,7 @@ print("RMSE: " + str(np.sqrt(np.mean(sum(res**2)))))
 # linear regression AAR-SMB (WGMS data) ============================================================
 
 # define X and y:
-X = sma.add_constant(df[["WGMS_SMB"]][df["WGMS_AAR"] > 0]).dropna() # double brackets needed for LinearRegression
+X = sma.add_constant(df[["WGMS_SMB"]][df["WGMS_AAR"] > 0]).dropna() 
 y = df[["WGMS_AAR"]][df["WGMS_AAR"] > 0].dropna()
 
 # exclude AAR = 0:
@@ -685,14 +688,17 @@ ax1.set_ylabel("WGMS ARR", color="black")
 ax1.set_xlabel("WGMS SMB in mm w.eq.")
 ax1.tick_params(axis="y", colors="black")
 plot_01 = ax1.scatter(X["WGMS_SMB"], y, color="black", label="WGMS data")
-plot_02 = ax1.plot([-1300, 500], model.predict([[1, -1300], [1, 500]]), color="red", label="Trendline", linestyle="--")
+plot_02 = ax1.plot([-1300, 500], model.predict([[1, -1300], [1, 500]]), color="red", 
+                   label="Trendline", linestyle="--")
 plot_03 = ax1.plot(df["WGMS_SMB"][[29, 18]], upper[[29, 18]], color="red", linestyle="dotted")
-plot_04 = ax1.plot(df["WGMS_SMB"][[29, 18]], lower[[29, 18]], color="red", label="95% confidence interval",
-                   linestyle="dotted")
+plot_04 = ax1.plot(df["WGMS_SMB"][[29, 18]], lower[[29, 18]], color="red", 
+                   label="95% confidence interval", linestyle="dotted")
+plot_05 = ax1.plot(0, 0.5783, marker="x", color="black")
 plt.title("AAR-SMB regression (WGMS data)")
 # plt.text(-2500, 0.35, model_str) # full data set
 # plt.text(-1250, -0.4, model_str) # AAR > 0 
 plt.axvline(x=0, color="black", linestyle="--")
+plt.text(30, 0.5783, "$AAR_{0}$")
 plt.xlim(-1260, 420)
 plt.legend(bbox_to_anchor=(-0.1, -0.3, 1, 1), loc="lower left", ncols=3)
 plt.savefig("./Plots/aar_smb_wgms_regression.png", bbox_inches="tight", dpi=300)
@@ -751,10 +757,10 @@ else:
 # check RMSE:
 print("RMSE: " + str(np.sqrt(np.mean(sum(res**2)))))
 
-# linear regression AAR-SMB (long vs.short) ===========================================================
+# linear regression AAR-SMB (long vs.short) ========================================================
 
 # define X and y for short period:
-X = sma.add_constant(df[["SMB"]][11:39]).drop([23, 25]) # double brackets needed for LinearRegression
+X = sma.add_constant(df[["SMB"]][11:39]).drop([23, 25])
 y = df[["AAR"]][11:39].dropna()
 
 # create linear regression models:
@@ -784,7 +790,7 @@ std_err, upper, lower =  wls_prediction_std(model, alpha=0.05) # tool is valid f
 std_err = np.mean(std_err[:])
 
 # define X and y for WGMS:
-X_wgms = sma.add_constant(df[["WGMS_SMB"]][df["WGMS_AAR"] > 0]).dropna() # double brackets needed for LinearRegression
+X_wgms = sma.add_constant(df[["WGMS_SMB"]][df["WGMS_AAR"] > 0]).dropna()
 y_wgms = df[["WGMS_AAR"]][df["WGMS_AAR"] > 0].dropna()
 
 # exclude AAR = 0:
@@ -796,7 +802,7 @@ model_wgms = sma.OLS(y_wgms, X_wgms).fit()
 print(model_wgms.summary()) # large condition number only due to scale of X input
 print(model_wgms.params)
 # compute confidence intervals for WGMS:
-std_err_wgms, upper_wgms, lower_wgms =  wls_prediction_std(model_wgms, alpha=0.05) # tool is valid for OLS
+std_err_wgms, upper_wgms, lower_wgms =  wls_prediction_std(model_wgms, alpha=0.05)
 std_err_wgms = np.mean(std_err_wgms[:])
 
 # plot original SMB with trend line
@@ -808,16 +814,18 @@ ax1.set_xlabel("SMB in mm w.eq.")
 ax1.tick_params(axis="y", colors="black")
 
 plot_05 = ax1.scatter(X_w["SMB"], y_w, color="black", label="1985-1994")
-plot_06 = ax1.plot([-4000, 500], model_w.predict([[1, -4000], [1, 500]]), color="red", label="Trendline (1985-2023)", linestyle="--")
+plot_06 = ax1.plot([-4000, 500], model_w.predict([[1, -4000], [1, 500]]), color="red", 
+                   label="Trendline (1985-2023)", linestyle="--")
 plot_07 = ax1.plot(df["SMB"][[7, 31]], upper_w[[7, 31]], color="red", linestyle="dotted")
-plot_08 = ax1.plot(df["SMB"][[7, 31]], lower_w[[7, 31]], color="red", label="95% confidence interval (1985-2023)",
-                   linestyle="dotted") 
+plot_08 = ax1.plot(df["SMB"][[7, 31]], lower_w[[7, 31]], color="red", 
+                   label="95% confidence interval (1985-2023)", linestyle="dotted") 
 
 plot_01 = ax1.scatter(X["SMB"], y, color="cornflowerblue", label="1995-2023")
-plot_02 = ax1.plot([-4000, 500], model.predict([[1, -4000], [1, 500]]), color="skyblue", label="Trendline (1995-2023)", linestyle="--")
+plot_02 = ax1.plot([-4000, 500], model.predict([[1, -4000], [1, 500]]), color="skyblue", 
+                   label="Trendline (1995-2023)", linestyle="--")
 plot_03 = ax1.plot(df["SMB"][[30, 31]], upper[[30, 31]], color="skyblue", linestyle="dotted")
-plot_04 = ax1.plot(df["SMB"][[30, 31]], lower[[30, 31]], color="skyblue", label="95% confidence interval (1995-2023)",
-                   linestyle="dotted")
+plot_04 = ax1.plot(df["SMB"][[30, 31]], lower[[30, 31]], color="skyblue", 
+                   label="95% confidence interval (1995-2023)", linestyle="dotted")
 
 plt.title("Comparison of regression periods")
 plt.xlim(-3400, 499)
@@ -841,7 +849,7 @@ std_err, upper, lower =  wls_prediction_std(model, alpha=0.05) # tool is valid f
 std_err = np.mean(std_err[:])
 
 # define X and y for WGMS:
-X_wgms = sma.add_constant(df[["WGMS_SMB"]][df["WGMS_AAR"] > 0]).dropna() # double brackets needed for LinearRegression
+X_wgms = sma.add_constant(df[["WGMS_SMB"]][df["WGMS_AAR"] > 0]).dropna() 
 y_wgms = df[["WGMS_AAR"]][df["WGMS_AAR"] > 0].dropna()
 
 # create linear regression model for WGMS:
@@ -849,7 +857,7 @@ model_wgms = sma.OLS(y_wgms, X_wgms).fit()
 print(model_wgms.summary()) # large condition number only due to scale of X input
 
 # compute confidence intervals for WGMS:
-std_err_wgms, upper_wgms, lower_wgms =  wls_prediction_std(model_wgms, alpha=0.05) # tool is valid for OLS
+std_err_wgms, upper_wgms, lower_wgms =  wls_prediction_std(model_wgms, alpha=0.05) 
 std_err_wgms = np.mean(std_err_wgms[:])
 
 # plot original SMB with trend line
@@ -861,17 +869,25 @@ ax1.set_xlabel("SMB in mm w.eq.")
 ax1.tick_params(axis="y", colors="black")
 
 plot_01 = ax1.scatter(X["SMB"], y, color="black", label="1985-1994")
-plot_02 = ax1.plot([-4000, 500], model.predict([[1, -4000], [1, 500]]), color="red", label="Trendline", linestyle="--")
+plot_02 = ax1.plot([-4000, 500], model.predict([[1, -4000], [1, 500]]), color="red", 
+                   label="Trendline", linestyle="--")
 plot_03 = ax1.plot(df["SMB"][[7, 31]], upper[[7, 31]], color="red", linestyle="dotted")
-plot_04 = ax1.plot(df["SMB"][[7, 31]], lower[[7, 31]], color="red", label="95% confidence interval",
-                   linestyle="dotted")
+plot_04 = ax1.plot(df["SMB"][[7, 31]], lower[[7, 31]], color="red", 
+                   label="95% confidence interval", linestyle="dotted")
 plot_05 = ax1.scatter(X_wgms["WGMS_SMB"], y_wgms, color="darkorchid", label="WGMS data")
-plot_06 = ax1.plot([-1300, 500], model_wgms.predict([[1, -1300], [1, 500]]), color="orchid", label="Trendline (WGMS)", linestyle="--")
-plot_07 = ax1.plot(df["WGMS_SMB"][[29, 18]], upper_wgms[[29, 18]], color="orchid", linestyle="dotted")
-plot_08 = ax1.plot(df["WGMS_SMB"][[29, 18]], lower_wgms[[29, 18]], color="orchid", label="95% confidence interval (WGMS)",
+plot_06 = ax1.plot([-1300, 500], model_wgms.predict([[1, -1300], [1, 500]]), color="orchid", 
+                   label="Trendline (WGMS)", linestyle="--")
+plot_07 = ax1.plot(df["WGMS_SMB"][[29, 18]], upper_wgms[[29, 18]], color="orchid", 
                    linestyle="dotted")
+plot_08 = ax1.plot(df["WGMS_SMB"][[29, 18]], lower_wgms[[29, 18]], color="orchid", 
+                   label="95% confidence interval (WGMS)", linestyle="dotted")
+plot_09 = ax1.plot(0, 0.7418, marker="x", color="black")
+plot_10 = ax1.plot(0, 0.5783, marker="x", color="black")
+
 plt.title("Comparison of AAR-SMB regressions")
-plt.xlim(-3400, 499)
+plt.xlim(-3400, 999)
+plt.text(0, 0.7418, "$AAR_{0}$")
+plt.text(0, 0.5783, "$AAR_{0}$" + " (WGMS)")
 plt.axvline(x=0, color="black", linestyle="--")
 plt.legend(bbox_to_anchor=(-0.1, -0.42, 1, 1), loc="lower left", ncols=2)
 plt.savefig("./Plots/smb_aar_regression_comparison_wgms.png", bbox_inches="tight", dpi=300)
