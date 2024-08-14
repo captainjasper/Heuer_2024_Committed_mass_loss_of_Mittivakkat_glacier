@@ -97,8 +97,10 @@ fig, ax1 = plt.subplots()
 ax2 = ax1.twinx()
 
 # AAR0 comparison:
-plot_01 = ax1.plot(aar0_df["Year"], aar0_df["AAR0"], color="black", label="$AAR_{0}$" + " (original data)")
-plot_02 = ax1.plot(wgms_aar0_df["Year"], wgms_aar0_df["AAR0"], color="black", linestyle="--", label="$AAR_{0}$" + " (WGMS data)")
+plot_01 = ax1.plot(aar0_df["Year"], aar0_df["AAR0"], color="black",
+                   label="$AAR_{0}$" + " (original data)")
+plot_02 = ax1.plot(wgms_aar0_df["Year"], wgms_aar0_df["AAR0"], color="black", linestyle="--",
+                   label="$AAR_{0}$" + " (WGMS data)")
 ax1.set_ylabel("$AAR_{0}$")
 
 # R² comparison:
