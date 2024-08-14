@@ -1,0 +1,14 @@
+spyder-kernels
+numpy
+pandas
+matplotlib
+gdal
+rasterio
+rioxarray
+xarray
+cftime
+scikit-learn
+netcdf4
+openpyxl
+statsmodels
+

@@ -1,0 +1,72 @@
+// created on:  2024-03-21
+// @author:     Jasper Heuer
+// use:         collect and cloud mask Landsat 5/7/8/9 imagery
+
+// get data ==================================================================================================================
+
+// create raw image collection for cloud masking:
+// var cloud_col = ee.ImageCollection("LANDSAT/LT05/C02/T1_TOA") // use this for Landsat 05
+// var cloud_col = ee.ImageCollection("LANDSAT/LE07/C02/T1_TOA") // use this for Landsat 07
+// var cloud_col = ee.ImageCollection("LANDSAT/LC08/C02/T1_TOA") // use this for Landsat 08
+var cloud_col = ee.ImageCollection("LANDSAT/LC09/C02/T1_TOA") // use this for Landsat 09
+  .filterDate("2007-09-08", "2007-09-10")
+  .filter(ee.Filter.calendarRange(8, 9, "month")) // filter for August and September dates
+  .filterBounds(geometry) // filter for region of interest
+  .filter(ee.Filter.lte("CLOUD_COVER", 100)); // only get imagery with less than or equal to x% cloud cover
+
+// create image collection:
+// var main_col = ee.ImageCollection("LANDSAT/LT05/C02/T1_L2")
+// var main_col = ee.ImageCollection("LANDSAT/LE07/C02/T1_L2")
+// var main_col = ee.ImageCollection("LANDSAT/LC08/C02/T1_L2")
+var main_col = ee.ImageCollection("LANDSAT/LC09/C02/T1_L2")
+  .filterDate("2007-09-08", "2007-09-10")
+  .filter(ee.Filter.calendarRange(8, 9, "month"))
+  .filterBounds(geometry) 
+  .select(["SR_B1", "SR_B2", "SR_B3", "SR_B4", "SR_B5", "SR_B7"]) // select bands to be exported
+  .filter(ee.Filter.lte("CLOUD_COVER", 100));
+  
+// define functions ==========================================================================================================
+
+// define cloud score function:  
+function score_collection(img) { 
+  img = ee.Algorithms.Landsat.simpleCloudScore(img)
+    .select(["cloud"])
+    .lte(35); // threshold for what counts as cloud - the higher the more cloudy a pixel needs to be to be masked out
+  return img;
+}
+
+// define clipping function:
+function clip_collection(img) { // clipping
+  return img.clip(geometry);
+}
+
+// clip imagery ==============================================================================================================
+
+var clipped_cloud_col = cloud_col.map(score_collection).map(clip_collection); // cloud mask collection
+var clipped_main_col = main_col.map(clip_collection); // Landsat imagery collection
+
+print(clipped_main_col);
+
+// batch export images =======================================================================================================
+
+var id = clipped_main_col.aggregate_array("system:index");
+
+id.evaluate(function(list){
+  list.map(function(id){
+    var image = clipped_main_col.filter(ee.Filter.eq("system:index", id)).first();
+    var mask = clipped_cloud_col.filter(ee.Filter.eq("system:index", id)).first();
+    var masked_img = image.updateMask(mask);
+    
+    Export.image.toDrive({
+      image: masked_img,
+      scale: 30,
+      region: geometry,
+      crs: "EPSG:4326",
+      maxPixels: 1e13,
+      folder: "MITTIVAKKAT_simple_cloud_mask", // change output folder here, if needed
+      description: id,
+      formatOptions: {cloudOptimized: true}
+    });
+  });
+});
+
